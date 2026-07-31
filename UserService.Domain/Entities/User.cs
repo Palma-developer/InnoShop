@@ -9,7 +9,6 @@ namespace UserService.Domain.Entities
         public Email Email { get; set; }
         public UserRole Role { get; set; }
         public string Password { get; set; }
-
         public string EmailConfirmed { get; set; } = string.Empty;
         public bool IsActive { get; set; }
 
