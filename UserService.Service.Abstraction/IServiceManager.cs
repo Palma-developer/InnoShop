@@ -8,6 +8,6 @@ namespace UserService.Service.Abstraction
 {
     public interface IServiceManager
     {
-        IUserService userService { get; }
+        IUserService UserService { get; }
     }
 }

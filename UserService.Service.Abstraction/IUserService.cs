@@ -9,7 +9,7 @@ namespace UserService.Service.Abstraction
         Task<UserDTO> GetByIdAsync(int id, CancellationToken cancellationToken= default);
 
         Task<UserDTO> CreateAsync(UserDTO userDTO, CancellationToken cancellationToken= default);
-        Task UpdateAsync(UserDTO userDTO, CancellationToken cancellationToken= default);
+        Task UpdateAsync(int id, UserDTO userDTO, CancellationToken cancellationToken= default);
 
         Task DeleteAsync(int id, CancellationToken cancellationToken= default);
 

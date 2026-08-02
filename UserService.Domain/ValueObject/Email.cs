@@ -22,6 +22,6 @@ namespace UserService.Domain.ValueObject
 
             Value = email;
         }
-        public override string ToString()=>Value;
+        public override string ToString()=>Value ;
     }
 }

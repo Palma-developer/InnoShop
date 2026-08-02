@@ -15,7 +15,7 @@ namespace UserService.Domain.Repository
 
         void Insert(User user);
         void Update(User user);
-        void Delete(int id);
+        void Delete(User user);
 
     }
 }
