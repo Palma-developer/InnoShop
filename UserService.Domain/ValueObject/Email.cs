@@ -17,7 +17,7 @@ namespace UserService.Domain.ValueObject
             }
             if (!email.Contains("@"))
             {
-                throw new ArgumentException("Email не может не содержать @");
+                throw new ArgumentException("Email не может не содержать @"); 
             }
 
             Value = email;

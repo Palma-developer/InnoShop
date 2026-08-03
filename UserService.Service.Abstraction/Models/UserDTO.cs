@@ -14,7 +14,7 @@ namespace UserService.Service.Abstraction.Models
         public string Email { get; set; }
         public string Role { get; set; }
         public string Password { get; set; }
-        public string EmailConfirmed { get; set; } = string.Empty;
+        public bool EmailConfirmed { get; set; }
         public bool IsActive { get; set; }
 
     }
