@@ -1,27 +1,24 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace UserService.Domain.ValueObject
+﻿namespace UserService.Domain.ValueObject
 {
     public class Email
     {
-        public string Value { get; set; } = string.Empty;
-        public Email(string email) 
-        {
-            if (string.IsNullOrEmpty(email))
-            {
-                throw new ArgumentNullException("Email не может быть пустым");
-            }
-            if (!email.Contains("@"))
-            {
-                throw new ArgumentException("Email не может не содержать @"); 
-            }
+        public string Value { get; set; }
 
-            Value = email;
+        // Для EF Core
+        private Email() { }
+
+        // Параметр называется value — EF сможет связать его с свойством Value
+        public Email(string value)
+        {
+            if (string.IsNullOrEmpty(value))
+                throw new ArgumentNullException(nameof(value), "Email не может быть пустым");
+
+            if (!value.Contains("@"))
+                throw new ArgumentException("Email должен содержать @", nameof(value));
+
+            Value = value;
         }
-        public override string ToString()=>Value ;
+
+        public override string ToString() => Value;
     }
 }

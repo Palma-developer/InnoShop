@@ -5,7 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using UserService.Domain.Repository;
 using UserService.Domain.Entities;
-using System.Data.Entity;
+using Microsoft.EntityFrameworkCore;
 
 namespace UserService.Infrastructure.Persistence.Repository
 {
@@ -16,10 +16,10 @@ namespace UserService.Infrastructure.Persistence.Repository
         public UserRepository(RepositoryDbContext dbContext) => _dbContext = dbContext;
 
         public async Task<IEnumerable<User>> GetAllAsync(CancellationToken cancellationToken= default)=>
-            await _dbContext.Users.Include(x=> x.Name).ToListAsync(cancellationToken);
+            await _dbContext.Users.ToListAsync(cancellationToken);
 
         public async Task<User> GetByIdAsync(int id, CancellationToken cancellationToken=default)=>
-            await _dbContext.Users.Include(x =>x.Name).FirstOrDefaultAsync(x=>x.Id == id, cancellationToken);
+            await _dbContext.Users.FirstOrDefaultAsync(x=>x.Id == id, cancellationToken);
 
         public void Insert(User user)=>_dbContext.Add(user);
 

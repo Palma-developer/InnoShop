@@ -37,7 +37,8 @@ namespace UserService.Service
         public async Task<UserDTO> CreateAsync(UserDTO userDTO, CancellationToken cancellationToken = default)
         {
             var user=userDTO.Adapt<User>();
-            _repositoryManager.UnitOfWork.SaveChangesAsync(cancellationToken);
+            _repositoryManager.UserRepository.Insert(user);
+            await _repositoryManager.UnitOfWork.SaveChangesAsync(cancellationToken);
             return user.Adapt<UserDTO>();
         }
 
@@ -62,6 +63,8 @@ namespace UserService.Service
             user.IsActive = userDTO.IsActive;
             user.Role = role;
             user.Password = userDTO.Password;
+
+            
 
             await _repositoryManager.UnitOfWork.SaveChangesAsync(cancellationToken);
 

@@ -6,9 +6,9 @@ using System.Threading.Tasks;
 
 namespace UserService.Domain.Repository
 {
-    public class IRepositoryManager
+    public interface IRepositoryManager
     {
-        public IUserRepository UserRepository { get; set; }
-        public IUnitOfWork UnitOfWork { get; set; }
+        public IUserRepository UserRepository { get; }
+        public IUnitOfWork UnitOfWork { get; }
     }
 }
