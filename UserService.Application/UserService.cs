@@ -64,7 +64,7 @@ namespace UserService.Service
             user.Role = role;
             user.Password = userDTO.Password;
 
-            
+            _repositoryManager.UserRepository.Update(user);
 
             await _repositoryManager.UnitOfWork.SaveChangesAsync(cancellationToken);
 

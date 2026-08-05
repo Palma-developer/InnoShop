@@ -23,6 +23,7 @@ namespace UserService.Infrastructure.Persistence.Repository
 
         public void Insert(User user)=>_dbContext.Add(user);
 
+        public void Update(User user)=>_dbContext.Update(user);
         public void Delete(User user)=>_dbContext.Remove(user);
     }
 }

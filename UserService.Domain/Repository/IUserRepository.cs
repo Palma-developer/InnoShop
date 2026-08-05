@@ -14,6 +14,8 @@ namespace UserService.Domain.Repository
         Task <User> GetByIdAsync(int id, CancellationToken cancellationToken = default);
 
         void Insert(User user);
+
+        void Update(User user);
         void Delete(User user);
 
     }
