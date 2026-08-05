@@ -19,7 +19,13 @@ namespace  UserService.Infrastructure.Presintation.Controllers
 
             return Ok(users);
         }
+        [HttpGet("active")]
+        public async Task<IActionResult> GetActiveUsers(CancellationToken cancellationToken)
+        {
+            var users = await _serviceManager.UserService.GetAllActiveAsync(cancellationToken);
 
+            return Ok(users);
+        }
         [HttpGet("{userId:int}")]
         public async Task<IActionResult> GetUserById(int userId, CancellationToken cancellationToken)
         {

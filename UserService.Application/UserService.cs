@@ -17,11 +17,22 @@ namespace UserService.Service
         {
             
             var users = await _repositoryManager.UserRepository.GetAllAsync(cancellationToken);
+            
 
             var usersDto=users.Adapt<IEnumerable<UserDTO>>();
 
             return usersDto;
 
+        }
+
+        public async Task<IEnumerable<UserDTO>> GetAllActiveAsync(CancellationToken cancellationToken = default)
+        {
+            var users = await _repositoryManager.UserRepository.GetAllActiveAsync(cancellationToken);
+
+
+            var usersDto = users.Adapt<IEnumerable<UserDTO>>();
+
+            return usersDto;
         }
 
         public async Task<UserDTO> GetByIdAsync(int id, CancellationToken cancellationToken = default)
@@ -79,7 +90,7 @@ namespace UserService.Service
             {
                 throw new ArgumentException(Convert.ToString(id));
             }
-
+            user.IsActive=false;
             _repositoryManager.UserRepository.Delete(user);
 
             await _repositoryManager.UnitOfWork.SaveChangesAsync(cancellationToken);

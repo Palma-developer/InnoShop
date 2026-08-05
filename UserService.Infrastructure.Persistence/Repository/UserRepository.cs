@@ -18,12 +18,15 @@ namespace UserService.Infrastructure.Persistence.Repository
         public async Task<IEnumerable<User>> GetAllAsync(CancellationToken cancellationToken= default)=>
             await _dbContext.Users.ToListAsync(cancellationToken);
 
+        public async Task<IEnumerable<User>> GetAllActiveAsync(CancellationToken cancellationToken= default)=>
+            await _dbContext.Users.Where(u => u.IsActive).ToListAsync(cancellationToken);
+
         public async Task<User> GetByIdAsync(int id, CancellationToken cancellationToken=default)=>
-            await _dbContext.Users.FirstOrDefaultAsync(x=>x.Id == id, cancellationToken);
+            await _dbContext.Users.Where(u => u.IsActive == true).FirstOrDefaultAsync(x=>x.Id == id, cancellationToken);
 
         public void Insert(User user)=>_dbContext.Add(user);
 
         public void Update(User user)=>_dbContext.Update(user);
-        public void Delete(User user)=>_dbContext.Remove(user);
+        public void Delete(User user)=>_dbContext.Update(user);
     }
 }

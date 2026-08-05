@@ -6,6 +6,8 @@ namespace UserService.Service.Abstraction
     {
         Task<IEnumerable<UserDTO>> GetAllAsync( CancellationToken cancellationToken = default);
 
+        Task<IEnumerable<UserDTO>> GetAllActiveAsync( CancellationToken cancellationToken = default);
+
         Task<UserDTO> GetByIdAsync(int id, CancellationToken cancellationToken= default);
 
         Task<UserDTO> CreateAsync(UserDTO userDTO, CancellationToken cancellationToken= default);
