@@ -1,6 +1,8 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using UserService.Service.Abstraction;
 using UserService.Service.Abstraction.Models;
+ 
 
 namespace  UserService.Infrastructure.Presintation.Controllers
 {
@@ -12,6 +14,7 @@ namespace  UserService.Infrastructure.Presintation.Controllers
 
         public UserControler(IServiceManager serviceManager) => _serviceManager = serviceManager;
 
+        [Authorize]
         [HttpGet]
         public async Task<IActionResult> GetUsers(CancellationToken cancellationToken)
         {
@@ -19,6 +22,7 @@ namespace  UserService.Infrastructure.Presintation.Controllers
 
             return Ok(users);
         }
+        [Authorize]
         [HttpGet("active")]
         public async Task<IActionResult> GetActiveUsers(CancellationToken cancellationToken)
         {
@@ -26,6 +30,7 @@ namespace  UserService.Infrastructure.Presintation.Controllers
 
             return Ok(users);
         }
+        [Authorize]
         [HttpGet("{userId:int}")]
         public async Task<IActionResult> GetUserById(int userId, CancellationToken cancellationToken)
         {
@@ -33,15 +38,22 @@ namespace  UserService.Infrastructure.Presintation.Controllers
 
             return Ok(userDto);
         }
-
-        [HttpPost]
+        //регистрация
+        [HttpPost("registration")]
         public async Task<IActionResult> CreateUser([FromBody] UserDTO userDtoForCreate)
         {
             var userDto = await _serviceManager.UserService.CreateAsync(userDtoForCreate);
 
             return CreatedAtAction(nameof(GetUserById), new { userId = userDto.Id }, userDto);
         }
+        [HttpPost("login")]
+        public async Task<IActionResult> Login(string email, string password, CancellationToken cancellationToken)
+        {
+            var token=await _serviceManager.UserService.LoginAsync(email, password, cancellationToken);
+            return Ok(token);
+        }
 
+        [Authorize]
         [HttpPut("{userId:int}")]
         public async Task<IActionResult> UpdateUser(int userId, [FromBody] UserDTO userDtoForUpdate, CancellationToken cancellationToken)
         {
@@ -49,6 +61,7 @@ namespace  UserService.Infrastructure.Presintation.Controllers
             return NoContent();
         }
 
+        [Authorize]
         [HttpDelete("{userId:int}")]
         public async Task<IActionResult> DeleteUser(int userId, CancellationToken cancellationToken)
         {

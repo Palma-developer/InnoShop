@@ -24,6 +24,9 @@ namespace UserService.Infrastructure.Persistence.Repository
         public async Task<User> GetByIdAsync(int id, CancellationToken cancellationToken=default)=>
             await _dbContext.Users.Where(u => u.IsActive == true).FirstOrDefaultAsync(x=>x.Id == id, cancellationToken);
 
+        //получение пользователя по email
+        public async Task<User> GetByEmail(string email, CancellationToken cancellationToken = default)=>
+            await _dbContext.Users.Where(u=>u.IsActive==true).FirstOrDefaultAsync(x=>x.Email.Value==email, cancellationToken);
         public void Insert(User user)=>_dbContext.Add(user);
 
         public void Update(User user)=>_dbContext.Update(user);

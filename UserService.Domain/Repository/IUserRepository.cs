@@ -14,6 +14,8 @@ namespace UserService.Domain.Repository
         Task <User> GetByIdAsync(int id, CancellationToken cancellationToken = default);
 
         Task<IEnumerable<User>> GetAllActiveAsync(CancellationToken cancellationToken = default);
+
+        Task<User> GetByEmail(string email, CancellationToken cancellationToken = default);
         void Insert(User user);
 
         void Update(User user);

@@ -5,6 +5,10 @@ using UserService.Service.Abstraction.Models;
 using Mapster;
 using UserService.Domain.Entities;
 using UserService.Domain.Enums;
+using System.Text;
+using System.Security.Claims;
+using System.IdentityModel.Tokens.Jwt;
+using Microsoft.IdentityModel.Tokens;
 
 namespace UserService.Service
 {
@@ -45,12 +49,39 @@ namespace UserService.Service
             var userDto=user.Adapt<UserDTO>();
             return userDto;
         }
+        //метод регистрации
         public async Task<UserDTO> CreateAsync(UserDTO userDTO, CancellationToken cancellationToken = default)
         {
             var user=userDTO.Adapt<User>();
             _repositoryManager.UserRepository.Insert(user);
             await _repositoryManager.UnitOfWork.SaveChangesAsync(cancellationToken);
             return user.Adapt<UserDTO>();
+        }
+        //метод логина
+        public async Task<string> LoginAsync(string email, string password, CancellationToken cancellationToken= default)
+        {
+            var user = await _repositoryManager.UserRepository.GetByEmail(email);
+            if (user == null)
+            {
+                throw new ArgumentException(email);
+            }
+
+            if (user.Password != password)
+            {
+                throw new ArgumentException("Uncorrect password");
+            }
+            var claims = new List<Claim> { new Claim(ClaimTypes.Name, user.Name),
+                                         new Claim (ClaimTypes.Email, user.Email.Value),
+                                         new Claim(ClaimTypes.Role, user.Role.ToString()),
+                                         new Claim("EmailConfirm" , user.EmailConfirmed.ToString()),
+                                         new Claim("id", user.Id.ToString())};
+            var jwt = new JwtSecurityToken(
+                issuer: AuthOptions.ISSURE,
+                audience: AuthOptions.AUDIENCE,
+                claims: claims,
+                expires: DateTime.UtcNow.Add(TimeSpan.FromMinutes(30)),
+                signingCredentials: new SigningCredentials(AuthOptions.GetSymmetricSecurityKey(), SecurityAlgorithms.HmacSha256));
+            return new JwtSecurityTokenHandler().WriteToken(jwt);
         }
 
         public async Task UpdateAsync(int id, UserDTO userDTO, CancellationToken cancellationToken = default)
