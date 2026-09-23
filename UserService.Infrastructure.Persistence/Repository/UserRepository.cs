@@ -31,5 +31,7 @@ namespace UserService.Infrastructure.Persistence.Repository
 
         public void Update(User user)=>_dbContext.Update(user);
         public void Delete(User user)=>_dbContext.Update(user);
+
+        
     }
 }

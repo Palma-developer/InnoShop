@@ -11,6 +11,7 @@ using System.IdentityModel.Tokens.Jwt;
 using Microsoft.IdentityModel.Tokens;
 using MimeKit;
 using MailKit.Net.Smtp;
+using System.Diagnostics.Contracts;
 
 namespace UserService.Service
 {
@@ -133,7 +134,7 @@ namespace UserService.Service
         {
             var emailMessage = new MimeMessage();
 
-            emailMessage.From.Add(new MailboxAddress("Администрация InnoShop", "innoshop@gmail.com"));
+            emailMessage.From.Add(new MailboxAddress("Администрация InnoShop", "innoshop7227@gmail.com"));
             emailMessage.To.Add(new MailboxAddress("", email));
             emailMessage.Subject = "Подтверждение почты";
             emailMessage.Body = new TextPart(MimeKit.Text.TextFormat.Html)
@@ -144,7 +145,7 @@ namespace UserService.Service
             using (var client = new SmtpClient())
             {
                 await client.ConnectAsync("smtp.gmail.com", 465, true);
-                await client.AuthenticateAsync("innoshop@gmail.com", "password");//создать почту и вписать пароль
+                await client.AuthenticateAsync("innoshop7227@gmail.com", "innoshop123");//создать почту и вписать пароль
                 await client.SendAsync(emailMessage);
 
                 await client.DisconnectAsync(true);
@@ -153,6 +154,36 @@ namespace UserService.Service
         public string GenerationEmailConfirmationToken()
         {
             return Guid.NewGuid().ToString();
+        }
+
+        public async Task SaveConfirmationCodeAsync(int id, string code, CancellationToken cancellationToken = default)
+        {
+            var user= await _repositoryManager.UserRepository.GetByIdAsync(id);
+
+            if (user is null)
+            {
+                throw new Exception($"Пользователь {id} не найден");
+            }
+            user.EmailConfirmationToken = code;
+            await _repositoryManager.UnitOfWork.SaveChangesAsync(cancellationToken);
+        }
+        public async Task<bool> ConfirmEmailAsync(int id, string code, CancellationToken cancellationToken=default)
+        {
+            var user = await _repositoryManager.UserRepository.GetByIdAsync(id);
+
+            if(user is null)
+            {
+                return false;
+            }
+            if (user.EmailConfirmationToken != code)
+            {
+                return false;
+            }
+            user .EmailConfirmed = true;
+
+            await _repositoryManager.UnitOfWork.SaveChangesAsync(cancellationToken);
+
+            return true;
         }
     }
 }

@@ -30,6 +30,16 @@ namespace  UserService.Infrastructure.Presintation.Controllers
 
             return Ok(users);
         }
+
+        [Authorize]
+        [HttpGet("ConfirmEmail")]
+        public async Task<IActionResult> ConfirmEmail(int id, string code)
+        {
+            var result=await _serviceManager.UserService.ConfirmEmailAsync(id, code);
+            return Ok(result);
+        }
+
+
         [Authorize]
         [HttpGet("{userId:int}")]
         public async Task<IActionResult> GetUserById(int userId, CancellationToken cancellationToken)
@@ -45,16 +55,20 @@ namespace  UserService.Infrastructure.Presintation.Controllers
             var userDto = await _serviceManager.UserService.CreateAsync(userDtoForCreate);
 
             var code= Guid.NewGuid().ToString();
+            await _serviceManager.UserService.SaveConfirmationCodeAsync(userDto.Id, code);
+
             var callbackUrl = Url.Action(
                 "ConfirmEmail",
-                "Account",
+                "User",
                 new { userId = userDto.Id, code = code },
                 protocol: HttpContext.Request.Scheme);
-            await _serviceManager.UserService.SendEmailAsync(userDtoForCreate.Email, $"Подтвердите регистрацию, перейдя по ссылке: <a href='{callbackUrl}'>link</a>");
+            await _serviceManager.UserService.SendEmailAsync(userDto.Email, $"Подтвердите регистрацию, перейдя по ссылке: <a href='{callbackUrl}'>link</a>");
 
 
             return CreatedAtAction(nameof(GetUserById), new { userId = userDto.Id }, userDto);
         }
+        
+
         [HttpPost("login")]
         public async Task<IActionResult> Login(string email, string password, CancellationToken cancellationToken)
         {
