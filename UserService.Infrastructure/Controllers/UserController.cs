@@ -44,7 +44,13 @@ namespace  UserService.Infrastructure.Presintation.Controllers
         {
             var userDto = await _serviceManager.UserService.CreateAsync(userDtoForCreate);
 
-
+            var code= Guid.NewGuid().ToString();
+            var callbackUrl = Url.Action(
+                "ConfirmEmail",
+                "Account",
+                new { userId = userDto.Id, code = code },
+                protocol: HttpContext.Request.Scheme);
+            await _serviceManager.UserService.SendEmailAsync(userDtoForCreate.Email, $"Подтвердите регистрацию, перейдя по ссылке: <a href='{callbackUrl}'>link</a>");
 
 
             return CreatedAtAction(nameof(GetUserById), new { userId = userDto.Id }, userDto);

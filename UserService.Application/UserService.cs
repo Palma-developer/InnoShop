@@ -150,7 +150,10 @@ namespace UserService.Service
                 await client.DisconnectAsync(true);
             }
         }
-
+        public string GenerationEmailConfirmationToken()
+        {
+            return Guid.NewGuid().ToString();
+        }
     }
 }
 
