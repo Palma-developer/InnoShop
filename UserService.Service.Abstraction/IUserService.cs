@@ -18,5 +18,6 @@ namespace UserService.Service.Abstraction
         //метод для логина
         Task<string> LoginAsync(string email, string password, CancellationToken cancellationToken = default);
 
+        Task SendEmailAsync(string email, string message, CancellationToken cancellationToken= default);
     }
 }

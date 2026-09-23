@@ -44,6 +44,9 @@ namespace  UserService.Infrastructure.Presintation.Controllers
         {
             var userDto = await _serviceManager.UserService.CreateAsync(userDtoForCreate);
 
+
+
+
             return CreatedAtAction(nameof(GetUserById), new { userId = userDto.Id }, userDto);
         }
         [HttpPost("login")]
@@ -69,5 +72,6 @@ namespace  UserService.Infrastructure.Presintation.Controllers
 
             return NoContent();
         }
+        
     }
 }
