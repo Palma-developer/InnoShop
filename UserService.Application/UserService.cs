@@ -145,7 +145,7 @@ namespace UserService.Service
             using (var client = new SmtpClient())
             {
                 await client.ConnectAsync("smtp.gmail.com", 465, true);
-                await client.AuthenticateAsync("innoshop7227@gmail.com", "innoshop123");//создать почту и вписать пароль
+                await client.AuthenticateAsync("innoshop7227@gmail.com", "ruioqwhorlzfdwsu");//создать почту и вписать пароль
                 await client.SendAsync(emailMessage);
 
                 await client.DisconnectAsync(true);

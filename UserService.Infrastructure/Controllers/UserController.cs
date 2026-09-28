@@ -31,11 +31,11 @@ namespace  UserService.Infrastructure.Presintation.Controllers
             return Ok(users);
         }
 
-        [Authorize]
+        
         [HttpGet("ConfirmEmail")]
-        public async Task<IActionResult> ConfirmEmail(int id, string code)
+        public async Task<IActionResult> ConfirmEmail(int userId, string code)
         {
-            var result=await _serviceManager.UserService.ConfirmEmailAsync(id, code);
+            var result=await _serviceManager.UserService.ConfirmEmailAsync(userId, code);
             return Ok(result);
         }
 
@@ -57,12 +57,19 @@ namespace  UserService.Infrastructure.Presintation.Controllers
             var code= Guid.NewGuid().ToString();
             await _serviceManager.UserService.SaveConfirmationCodeAsync(userDto.Id, code);
 
-            var callbackUrl = Url.Action(
+            /*var callbackUrl = Url.Action(
                 "ConfirmEmail",
                 "User",
                 new { userId = userDto.Id, code = code },
                 protocol: HttpContext.Request.Scheme);
-            await _serviceManager.UserService.SendEmailAsync(userDto.Email, $"Подтвердите регистрацию, перейдя по ссылке: <a href='{callbackUrl}'>link</a>");
+            */
+            var encodedCode = Uri.EscapeDataString(code);
+            var callbackUrl = $"http://localhost:5111/api/users/ConfirmEmail?userId={userDto.Id}&code={encodedCode}";
+            Console.WriteLine($"[ОТЛАДКА] Значение callbackUrl: '{callbackUrl}'");
+            Console.WriteLine($"[ОТЛАДКА] Длина строки: {callbackUrl?.Length ?? 0}");
+            //var htmlMessage = $"Подтвердите регистрацию, перейдя по ссылке: <a href=\"https://google.com\" style=\"color: blue; text-decoration: underline;\">Подтвердить email (Тест Google)</a>";
+            var htmlMessage = $"Подтвердите регистрацию, перейдя по ссылке: <a href=\"{callbackUrl}\">Подтвердить email</a>";
+            await _serviceManager.UserService.SendEmailAsync(userDto.Email, htmlMessage);
 
 
             return CreatedAtAction(nameof(GetUserById), new { userId = userDto.Id }, userDto);

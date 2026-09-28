@@ -12,7 +12,8 @@ namespace UserService.Domain.Entities
         public bool EmailConfirmed { get; set; }
         public bool IsActive { get; set; }
 
-        public string EmailConfirmationToken { get; set; }
+        public string? EmailConfirmationToken { get; set; }
+
 
     }
 }
