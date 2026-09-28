@@ -185,6 +185,69 @@ namespace UserService.Service
 
             return true;
         }
+
+        public async Task RequestPasswordResetAsync(string email, CancellationToken cancellationToken = default)
+        {
+            var user = await _repositoryManager.UserRepository.GetByEmail(email);
+            if (user is null)
+            {
+                return;
+            }
+
+            var resetToken = Guid.NewGuid().ToString("N");
+            user.PasswordResetToken = resetToken;
+            user.PasswordResetTokenExprice = DateTime.UtcNow.AddMinutes(15);
+
+            _repositoryManager.UserRepository.Update(user);
+
+            await _repositoryManager.UnitOfWork.SaveChangesAsync(cancellationToken);
+
+
+            var encodedToken= Uri.EscapeDataString(resetToken);
+            var callbackUrl= $"http://localhost:5111/api/users/reset-password?userId={user.Id}&token={encodedToken}";
+
+            var htmlMessage= $"Для сброса пароля перейдите по ссылке (действует 15 минут): <br><br>" +
+                      $"<a href=\"{callbackUrl}\" \">Сбросить пароль</a>";
+            await SendEmailAsync(user.Email.Value, htmlMessage, cancellationToken);
+        }
+
+        public async Task ResetPasswordAsync(int userId, string token, string newPassword, CancellationToken cancellationToken = default)
+        {
+            var user =await _repositoryManager.UserRepository.GetByIdAsync(userId);
+            if (user is null || user.PasswordResetToken != token)
+            {
+                throw new InvalidOperationException("Неверная или просроченая ссылка для сброса пароля");
+            }
+            if (user.PasswordResetTokenExprice < DateTime.UtcNow)
+            {
+                throw new InvalidOperationException("Срок действия ссылки истек");
+            }
+            user.Password=newPassword;
+
+            user.PasswordResetToken = null;
+            user.PasswordResetTokenExprice = null;
+
+            _repositoryManager.UserRepository.Update(user);
+
+            await _repositoryManager.UnitOfWork.SaveChangesAsync(cancellationToken);
+        }
+
+        public async Task ValidateResetTokenAsync(int userId, string token, CancellationToken cancellationToken = default)
+        {
+            var user = await _repositoryManager.UserRepository.GetByIdAsync(userId);
+
+            if (user == null || user.PasswordResetToken != token)
+            {
+                throw new InvalidOperationException("Неверная или просроченная ссылка для сброса пароля.");
+            }
+
+            if (user.PasswordResetTokenExprice < DateTime.UtcNow)
+            {
+                throw new InvalidOperationException("Срок действия ссылки для сброса пароля истек.");
+            }
+
+            
+        }
     }
 }
 

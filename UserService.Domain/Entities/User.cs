@@ -14,6 +14,7 @@ namespace UserService.Domain.Entities
 
         public string? EmailConfirmationToken { get; set; }
 
-
+        public string? PasswordResetToken {  get; set; }
+        public DateTime? PasswordResetTokenExprice { get; set; }
     }
 }

@@ -23,5 +23,10 @@ namespace UserService.Service.Abstraction
         Task<bool> ConfirmEmailAsync(int id, string code, CancellationToken cancellationToken = default);
 
         Task SaveConfirmationCodeAsync(int id, string code, CancellationToken cancellationToken = default);
+
+        Task RequestPasswordResetAsync(string email, CancellationToken cancellationToken = default);
+        Task ResetPasswordAsync(int id, string token, string newPassword, CancellationToken cancellationToken = default);
+
+        Task ValidateResetTokenAsync(int userId, string token, CancellationToken cancellationToken = default);
     }
 }

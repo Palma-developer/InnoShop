@@ -99,6 +99,41 @@ namespace  UserService.Infrastructure.Presintation.Controllers
 
             return NoContent();
         }
-        
+
+        [HttpPost ("forgot-password")]
+        public async Task<IActionResult> ForgotPassword([FromBody] ForgotPasswordRequest request, CancellationToken cancellationToken)
+        {
+            await _serviceManager.UserService.RequestPasswordResetAsync(request.Email, cancellationToken);
+            return Ok("Если пользователь с таким email существует, дальнешие дейсвтвия отправлены на почту");
+        }
+        [HttpPost("reset-password")]
+        public async Task<IActionResult> ResetPassword([FromBody]ResetPasswordRequest request, CancellationToken cancellationToken)
+        {
+            try
+            {
+                await _serviceManager.UserService.ResetPasswordAsync(request.UserId, request.Token, request.NewPassword, cancellationToken);
+                return Ok("Пароль успешно изменен");
+
+            }
+            catch(InvalidOperationException ex)
+            {
+                return BadRequest(ex.Message);
+            }
+        }
+        [HttpGet ("reset-password")]
+        public async Task<IActionResult> ValidateResetToken([FromQuery] int userId,[FromQuery] string token, CancellationToken cancellationToken)
+        {
+            try
+            {
+                await _serviceManager.UserService.ValidateResetTokenAsync(userId, token, cancellationToken);
+                return Ok($" Токен действителен!\n\nДля завершения сброса пароля откройте Swagger и отправьте POST-запрос на /api/users/reset-password со следующими данными:\n\n{{\n  \"userId\": {userId},\n  \"token\": \"{token}\",\n  \"newPassword\": \"ВашНовыйПароль123\"\n}}");
+            }
+            catch (InvalidOperationException ex)
+            {
+                
+                return BadRequest(ex.Message);
+            }
+        }
+
     }
 }
