@@ -1,5 +1,18 @@
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
+using Microsoft.OpenApi.Models;
+using ProductService.Service;
+using ProductService.Service.Abstraction;
+using ProductService.Domain.Repository;
+using ProductService.Infrastructure.Persistence;
+using ProductService.Infrastructure.Persistence.Repository;
+using ProductService.Infrastructure.Presentation.Middleware;
+using ProductServiceImpl = ProductService.Services.ProductService;
+using ProductService.Infrastructure.Presentation;
+using System.Reflection.Metadata; // Для AssemblyReference
 
-namespace ProductManagmentService
+namespace ProductService
 {
     public class Program
     {
@@ -7,26 +20,91 @@ namespace ProductManagmentService
         {
             var builder = WebApplication.CreateBuilder(args);
 
-            // Add services to the container.
+            // 1. Регистрация Mapster (если ты его настроил в ProductService, иначе закомментируй)
+            // MapsterConfig.Register();
 
-            builder.Services.AddControllers();
-            // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
-            builder.Services.AddOpenApi();
+            // 2. Регистрация контроллеров с указанием сборки (требует наличия класса AssemblyReference)
+            builder.Services.AddControllers().AddApplicationPart(typeof(AssemblyReference).Assembly);
+
+            // 3. Детальная настройка Swagger с поддержкой Bearer токена (как в UserService)
+            builder.Services.AddSwaggerGen(c =>
+            {
+                c.SwaggerDoc("v1", new OpenApiInfo { Title = "ProductService API", Version = "v1" });
+
+                c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
+                {
+                    In = ParameterLocation.Header,
+                    Description = "Введите JWT токен: Bearer {token}",
+                    Name = "Authorization",
+                    Type = SecuritySchemeType.ApiKey
+                });
+
+                c.AddSecurityRequirement(new OpenApiSecurityRequirement
+                {
+                    {
+                        new OpenApiSecurityScheme
+                        {
+                            Reference = new OpenApiReference
+                            {
+                                Type = ReferenceType.SecurityScheme,
+                                Id = "Bearer"
+                            }
+                        },
+                        new string[] {}
+                    }
+                });
+            });
+
+            // 4. Регистрация зависимостей (DI)
+            builder.Services.AddScoped<IProductRepository, ProductRepository>();
+            builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
+            // Используем псевдоним ProductServiceImpl, чтобы компилятор не путал класс с неймспейсом
+            builder.Services.AddScoped<IProductService, ProductServiceImpl>();
+
+            // 5. Настройка базы данных (AddDbContextPool как в UserService)
+            builder.Services.AddDbContextPool<ProductDbContext>(options =>
+            {
+                // Убедись, что в appsettings.json ключ называется "DefaultConnection" или "Database"
+                var connectionString = builder.Configuration.GetConnectionString("Database");
+                options.UseSqlServer(connectionString);
+            });
+
+            // 6. Аутентификация и Авторизация (JWT)
+            builder.Services.AddAuthorization();
+            builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme).AddJwtBearer(options =>
+            {
+                options.TokenValidationParameters = new TokenValidationParameters
+                {
+                    ValidateIssuer = true,
+                    ValidIssuer = AuthOptions.ISSURE,       // Должно совпадать с UserService
+                    ValidateAudience = true,
+                    ValidAudience = AuthOptions.AUDIENCE,   // Должно совпадать с UserService
+                    ValidateLifetime = true,
+                    IssuerSigningKey = AuthOptions.GetSymmetricSecurityKey(), // Должен быть тот же ключ
+                    ValidateIssuerSigningKey = true,
+                };
+            });
 
             var app = builder.Build();
 
-            // Configure the HTTP request pipeline.
-            if (app.Environment.IsDevelopment())
-            {
-                app.MapOpenApi();
-            }
+            // 7. Middleware pipeline (в том же порядке, что и в UserService)
+            app.UseSwagger();
+            app.UseSwaggerUI();
 
             app.UseHttpsRedirection();
 
+            app.UseMiddleware<ExceptionMiddleware>();
+            app.UseAuthentication();
             app.UseAuthorization();
 
-
             app.MapControllers();
+
+            // 8. Автоматическая миграция БД при запуске
+            using (var scope = app.Services.CreateScope())
+            {
+                var db = scope.ServiceProvider.GetRequiredService<ProductDbContext>();
+                db.Database.Migrate();
+            }
 
             app.Run();
         }
