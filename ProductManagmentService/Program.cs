@@ -9,7 +9,7 @@ using ProductService.Infrastructure.Persistence;
 using ProductService.Infrastructure.Persistence.Repository;
 using ProductService.Infrastructure.Presentation.Middleware;
 using ProductServiceImpl = ProductService.Services.ProductService;
-using ProductService.Infrastructure.Presentation;
+using ProductService.Infrastructure.Presentation.Controllers;
 using System.Reflection.Metadata; // Для AssemblyReference
 
 namespace ProductService
@@ -24,7 +24,7 @@ namespace ProductService
             // MapsterConfig.Register();
 
             // 2. Регистрация контроллеров с указанием сборки (требует наличия класса AssemblyReference)
-            builder.Services.AddControllers().AddApplicationPart(typeof(AssemblyReference).Assembly);
+            builder.Services.AddControllers().AddApplicationPart(typeof(ProductController).Assembly);
 
             // 3. Детальная настройка Swagger с поддержкой Bearer токена (как в UserService)
             builder.Services.AddSwaggerGen(c =>
