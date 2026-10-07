@@ -17,7 +17,7 @@ namespace ProductService.Infrastructure.Presentation.Controllers
             _productService = productService;
         }
 
-        // Вспомогательный метод: достаем userId из JWT-токена
+        
         private int GetCurrentUserId()
         {
             var userIdClaim = User.FindFirst("id")?.Value;
@@ -90,7 +90,7 @@ namespace ProductService.Infrastructure.Presentation.Controllers
             catch (UnauthorizedAccessException ex) { return Forbid(); }
         }
 
-        // Эндпоинт для UserService (деактивация/активация пользователя)
+       
         [HttpPut("hide-by-user/{userId:int}")]
         public async Task<IActionResult> HideByUser(int userId, CancellationToken ct)
         {

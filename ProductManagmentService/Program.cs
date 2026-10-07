@@ -10,7 +10,7 @@ using ProductService.Infrastructure.Persistence.Repository;
 using ProductService.Infrastructure.Presentation.Middleware;
 using ProductServiceImpl = ProductService.Services.ProductService;
 using ProductService.Infrastructure.Presentation.Controllers;
-using System.Reflection.Metadata; // Для AssemblyReference
+using System.Reflection.Metadata; 
 
 namespace ProductService
 {
@@ -20,10 +20,7 @@ namespace ProductService
         {
             var builder = WebApplication.CreateBuilder(args);
 
-            // 1. Регистрация Mapster (если ты его настроил в ProductService, иначе закомментируй)
-            // MapsterConfig.Register();
-
-            // 2. Регистрация контроллеров с указанием сборки (требует наличия класса AssemblyReference)
+            
             builder.Services.AddControllers().AddApplicationPart(typeof(ProductController).Assembly);
 
 
@@ -36,7 +33,7 @@ namespace ProductService
                           .AllowAnyHeader();
                 });
             });
-            // 3. Детальная настройка Swagger с поддержкой Bearer токена (как в UserService)
+            
             builder.Services.AddSwaggerGen(c =>
             {
                 c.SwaggerDoc("v1", new OpenApiInfo { Title = "ProductService API", Version = "v1" });
@@ -65,58 +62,41 @@ namespace ProductService
                 });
             });
 
-            // 4. Регистрация зависимостей (DI)
+           
             builder.Services.AddScoped<IProductRepository, ProductRepository>();
             builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
-            // Используем псевдоним ProductServiceImpl, чтобы компилятор не путал класс с неймспейсом
+           
             builder.Services.AddScoped<IProductService, ProductServiceImpl>();
 
-            // 5. Настройка базы данных (AddDbContextPool как в UserService)
+            
             builder.Services.AddDbContextPool<ProductDbContext>(options =>
             {
-                // Убедись, что в appsettings.json ключ называется "DefaultConnection" или "Database"
+                
                 var connectionString = builder.Configuration.GetConnectionString("Database");
                 options.UseSqlServer(connectionString);
             });
 
-            // 6. Аутентификация и Авторизация (JWT)
+            
             builder.Services.AddAuthorization();
             builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme).AddJwtBearer(options =>
             {
                 options.TokenValidationParameters = new TokenValidationParameters
                 {
                     ValidateIssuer = true,
-                    ValidIssuer = AuthOptions.ISSUER,       // Должно совпадать с UserService
+                    ValidIssuer = AuthOptions.ISSUER,       
                     ValidateAudience = true,
-                    ValidAudience = AuthOptions.AUDIENCE,   // Должно совпадать с UserService
+                    ValidAudience = AuthOptions.AUDIENCE,   
                     ValidateLifetime = true,
-                    IssuerSigningKey = AuthOptions.GetSymmetricSecurityKey(), // Должен быть тот же ключ
+                    IssuerSigningKey = AuthOptions.GetSymmetricSecurityKey(), 
                     ValidateIssuerSigningKey = true,
                 };
 
-                options.Events = new Microsoft.AspNetCore.Authentication.JwtBearer.JwtBearerEvents
-                {
-                    OnAuthenticationFailed = context =>
-                    {
-                        // Эта строка напишет в консоль ТОЧНУЮ причину ошибки (например, "Signature validation failed")
-                        Console.WriteLine($"[JWT ОШИБКА] {context.Exception.Message}");
-                        if (context.Exception.GetType() == typeof(SecurityTokenExpiredException))
-                        {
-                            context.Response.Headers.Append("Token-Expired", "true");
-                        }
-                        return Task.CompletedTask;
-                    },
-                    OnTokenValidated = context =>
-                    {
-                        Console.WriteLine("[JWT УСПЕХ] Токен успешно проверен!");
-                        return Task.CompletedTask;
-                    }
-                };
+                
             });
 
             var app = builder.Build();
 
-            // 7. Middleware pipeline (в том же порядке, что и в UserService)
+            
             app.UseSwagger();
             app.UseSwaggerUI();
 
@@ -129,7 +109,7 @@ namespace ProductService
 
             app.MapControllers();
 
-            // 8. Автоматическая миграция БД при запуске
+            
             using (var scope = app.Services.CreateScope())
             {
                 var db = scope.ServiceProvider.GetRequiredService<ProductDbContext>();

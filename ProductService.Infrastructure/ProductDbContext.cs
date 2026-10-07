@@ -11,7 +11,7 @@ namespace ProductService.Infrastructure.Persistence
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
-            // Глобальный фильтр: скрытые продукты не видны обычным пользователям
+            
             modelBuilder.Entity<Product>().HasQueryFilter(p => !p.IsHidden);
 
             modelBuilder.Entity<Product>().Property(p => p.Price).HasColumnType("decimal(18,2)");

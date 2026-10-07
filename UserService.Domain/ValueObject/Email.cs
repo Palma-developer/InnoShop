@@ -4,10 +4,10 @@
     {
         public string Value { get; set; }
 
-        // Для EF Core
+        
         private Email() { }
 
-        // Параметр называется value — EF сможет связать его с свойством Value
+        
         public Email(string value)
         {
             if (string.IsNullOrEmpty(value))

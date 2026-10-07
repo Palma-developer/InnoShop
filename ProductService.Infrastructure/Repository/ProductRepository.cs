@@ -59,7 +59,7 @@ namespace ProductService.Infrastructure.Persistence.Repository
         public async Task<IEnumerable<Product>> GetAllByUserIdIgnoringFiltersAsync(int userId, CancellationToken ct = default)
         {
             return await _context.Products
-                .IgnoreQueryFilters() // <-- ЭТА СТРОКА ОТКЛЮЧАЕТ ПРОВЕРКУ IsHidden = 0
+                .IgnoreQueryFilters() 
                 .Where(p => p.UserId == userId)
                 .ToListAsync(ct);
         }

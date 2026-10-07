@@ -83,10 +83,10 @@ namespace ProductService.Services
             await _unitOfWork.SaveChangesAsync(ct);
         }
 
-        // Для интеграции с UserService (деактивация/активация)
+        
         public async Task HideProductsByUserIdAsync(int userId, CancellationToken ct = default)
         {
-            // Игнорируем глобальный фильтр, чтобы найти скрытые продукты тоже
+           
             var products = await _repository.GetByUserIdAsync(userId, ct);
             foreach (var product in products)
             {
@@ -98,12 +98,12 @@ namespace ProductService.Services
 
         public async Task ShowProductsByUserIdAsync(int userId, CancellationToken ct = default)
         {
-            // Используем специальный метод, который видит скрытые продукты
+            
             var products = await _repository.GetAllByUserIdIgnoringFiltersAsync(userId, ct);
 
             foreach (var product in products)
             {
-                product.IsHidden = false; // Делаем видимым
+                product.IsHidden = false; 
                 _repository.Update(product);
             }
             await _unitOfWork.SaveChangesAsync(ct);
