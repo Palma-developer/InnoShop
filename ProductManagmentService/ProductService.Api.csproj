@@ -28,7 +28,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\ProductService.Application\ProductService.Application.csproj" />
+    <InternalsVisibleTo Include="ProductService.Tests" />
     <ProjectReference Include="..\ProductService.Domain\ProductService.Domain.csproj" />
     <ProjectReference Include="..\ProductService.Infrastructure.Presintation\ProductService.Infrastructure.Presintation.csproj" />
     <ProjectReference Include="..\ProductService.Infrastructure\ProductService.Infrastructure.Persistence.csproj" />

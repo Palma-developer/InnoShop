@@ -29,6 +29,7 @@
   </ItemGroup>
 
   <ItemGroup>
+	<InternalsVisibleTo Include="UserService.Tests" />
     <ProjectReference Include="..\UserService.Application\UserService.Service.csproj" />
     <ProjectReference Include="..\UserService.Domain\UserService.Domain.csproj" />
     <ProjectReference Include="..\UserService.Infrastructure.Persistence\UserService.Infrastructure.Persistence.csproj" />

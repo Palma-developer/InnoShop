@@ -15,7 +15,7 @@ using System.Diagnostics.Contracts;
 
 namespace UserService.Service
 {
-    internal sealed class UserService : IUserService
+    public sealed class UserService : IUserService
     {
         private readonly IRepositoryManager _repositoryManager;
 
@@ -62,7 +62,7 @@ namespace UserService.Service
             }
             
 
-            if(_repositoryManager.UserRepository.GetByEmail(userForCreateDTO.Email, cancellationToken) != null)
+            if( await _repositoryManager.UserRepository.GetByEmail(userForCreateDTO.Email, cancellationToken) != null)
             {
                 throw new InvalidOperationException("Пользовател с такой почтой уже зарегистрирован");
             }
@@ -74,6 +74,7 @@ namespace UserService.Service
             userDto.Password=userForCreateDTO.Password;
             userDto.Role=userForCreateDTO.Role;
             userDto.EmailConfirmed = false;
+
             var user = userDto.Adapt<User>();
             _repositoryManager.UserRepository.Insert(user);
             await _repositoryManager.UnitOfWork.SaveChangesAsync(cancellationToken);
