@@ -15,7 +15,7 @@ namespace  UserService.Infrastructure.Presintation.Controllers
         public UserControler(IServiceManager serviceManager) => _serviceManager = serviceManager;
 
         [Authorize]
-        [HttpGet]
+        [HttpGet ("Получить всех пользователь")]
         public async Task<IActionResult> GetUsers(CancellationToken cancellationToken)
         {
             var users = await _serviceManager.UserService.GetAllAsync(cancellationToken);
@@ -23,7 +23,7 @@ namespace  UserService.Infrastructure.Presintation.Controllers
             return Ok(users);
         }
         [Authorize]
-        [HttpGet("active")]
+        [HttpGet("Получить только активных пользователей")]
         public async Task<IActionResult> GetActiveUsers(CancellationToken cancellationToken)
         {
             var users = await _serviceManager.UserService.GetAllActiveAsync(cancellationToken);
@@ -41,7 +41,7 @@ namespace  UserService.Infrastructure.Presintation.Controllers
 
 
         [Authorize]
-        [HttpGet("{userId:int}")]
+        [HttpGet("Пользователь по ID {userId:int}")]
         public async Task<IActionResult> GetUserById(int userId, CancellationToken cancellationToken)
         {
             var userDto = await _serviceManager.UserService.GetByIdAsync(userId, cancellationToken);
@@ -50,24 +50,18 @@ namespace  UserService.Infrastructure.Presintation.Controllers
         }
         //регистрация
         [HttpPost("registration")]
-        public async Task<IActionResult> CreateUser([FromBody] UserDTO userDtoForCreate)
+        public async Task<IActionResult> CreateUser([FromBody] UserForCreate userDtoForCreate)
         {
             var userDto = await _serviceManager.UserService.CreateAsync(userDtoForCreate);
 
             var code= Guid.NewGuid().ToString();
             await _serviceManager.UserService.SaveConfirmationCodeAsync(userDto.Id, code);
 
-            /*var callbackUrl = Url.Action(
-                "ConfirmEmail",
-                "User",
-                new { userId = userDto.Id, code = code },
-                protocol: HttpContext.Request.Scheme);
-            */
+            
             var encodedCode = Uri.EscapeDataString(code);
             var callbackUrl = $"http://localhost:5111/api/users/ConfirmEmail?userId={userDto.Id}&code={encodedCode}";
             Console.WriteLine($"[ОТЛАДКА] Значение callbackUrl: '{callbackUrl}'");
             Console.WriteLine($"[ОТЛАДКА] Длина строки: {callbackUrl?.Length ?? 0}");
-            //var htmlMessage = $"Подтвердите регистрацию, перейдя по ссылке: <a href=\"https://google.com\" style=\"color: blue; text-decoration: underline;\">Подтвердить email (Тест Google)</a>";
             var htmlMessage = $"Подтвердите регистрацию, перейдя по ссылке: <a href=\"{callbackUrl}\">Подтвердить email</a>";
             await _serviceManager.UserService.SendEmailAsync(userDto.Email, htmlMessage);
 
@@ -77,27 +71,27 @@ namespace  UserService.Infrastructure.Presintation.Controllers
         
 
         [HttpPost("login")]
-        public async Task<IActionResult> Login(string email, string password, CancellationToken cancellationToken)
+        public async Task<IActionResult> Login(UserForLogin userForLogin, CancellationToken cancellationToken)
         {
-            var token=await _serviceManager.UserService.LoginAsync(email, password, cancellationToken);
+            var token=await _serviceManager.UserService.LoginAsync(userForLogin, cancellationToken);
             return Ok(token);
         }
 
         [Authorize]
-        [HttpPut("{userId:int}")]
-        public async Task<IActionResult> UpdateUser(int userId, [FromBody] UserDTO userDtoForUpdate, CancellationToken cancellationToken)
+        [HttpPut("Обновить пользователя {userId:int}")]
+        public async Task<IActionResult> UpdateUser(int userId, [FromBody] UserForUpdate userDtoForUpdate, CancellationToken cancellationToken)
         {
             await _serviceManager.UserService.UpdateAsync(userId, userDtoForUpdate, cancellationToken);
-            return NoContent();
+            return Ok("Пользователь был обнавлен");
         }
 
         [Authorize]
-        [HttpDelete("{userId:int}")]
+        [HttpDelete("Удалить пользователя {userId:int}")]
         public async Task<IActionResult> DeleteUser(int userId, CancellationToken cancellationToken)
         {
             await _serviceManager.UserService.DeleteAsync(userId, cancellationToken);
 
-            return NoContent();
+            return Ok("Пользователен переведен в состояние неактивности(все его товары скрыты)");
         }
 
         [HttpPost ("forgot-password")]
@@ -133,6 +127,12 @@ namespace  UserService.Infrastructure.Presintation.Controllers
                 
                 return BadRequest(ex.Message);
             }
+        }
+        [HttpGet ("Сделать пользователя активным")]
+        public async Task<IActionResult> UpdateUserToActive(string email, CancellationToken cancellationToken)
+        {
+            await _serviceManager.UserService.IsActiveUser(email, cancellationToken);
+            return Ok("Пользователь стал активен");
         }
 
     }

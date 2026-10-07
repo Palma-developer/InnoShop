@@ -9,6 +9,7 @@ namespace ProductService.Service.Abstraction
 {
     public interface IProductService
     {
+
         Task<IEnumerable<ProductDTO>> GetAllAsync(CancellationToken ct = default);
         Task<ProductDTO?> GetByIdAsync(int id, CancellationToken ct = default);
         Task<IEnumerable<ProductDTO>> SearchAsync(string? name, decimal? minPrice, decimal? maxPrice, bool? isAvailable, CancellationToken ct = default);

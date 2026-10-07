@@ -24,6 +24,16 @@ namespace UserManagmentService
 
 
             builder.Services.AddControllers().AddApplicationPart(typeof(UserService.Infrastructure.Presintation.AssemblyReference).Assembly);
+            builder.Services.AddCors(options =>
+            {
+                options.AddPolicy("AllowAll", policy =>
+                {
+                    policy.AllowAnyOrigin()
+                          .AllowAnyMethod()
+                          .AllowAnyHeader();
+                });
+            });
+
 
             builder.Services.AddSwaggerGen(c =>
             {
@@ -71,7 +81,7 @@ namespace UserManagmentService
                 options.TokenValidationParameters = new TokenValidationParameters
                 {
                     ValidateIssuer = true,
-                    ValidIssuer = AuthOptions.ISSURE,
+                    ValidIssuer = AuthOptions.ISSUER,
                     ValidateAudience=true,
                     ValidAudience=AuthOptions.AUDIENCE,
                     ValidateLifetime=true,
@@ -89,8 +99,8 @@ namespace UserManagmentService
             app.UseSwaggerUI();
 
             app.UseHttpsRedirection();
-            
-            
+
+            app.UseCors("AllowAll");
             app.UseAuthentication();
             app.UseAuthorization();
             

@@ -26,6 +26,16 @@ namespace ProductService
             // 2. Регистрация контроллеров с указанием сборки (требует наличия класса AssemblyReference)
             builder.Services.AddControllers().AddApplicationPart(typeof(ProductController).Assembly);
 
+
+            builder.Services.AddCors(options =>
+            {
+                options.AddPolicy("AllowAll", policy =>
+                {
+                    policy.AllowAnyOrigin()
+                          .AllowAnyMethod()
+                          .AllowAnyHeader();
+                });
+            });
             // 3. Детальная настройка Swagger с поддержкой Bearer токена (как в UserService)
             builder.Services.AddSwaggerGen(c =>
             {
@@ -76,12 +86,31 @@ namespace ProductService
                 options.TokenValidationParameters = new TokenValidationParameters
                 {
                     ValidateIssuer = true,
-                    ValidIssuer = AuthOptions.ISSURE,       // Должно совпадать с UserService
+                    ValidIssuer = AuthOptions.ISSUER,       // Должно совпадать с UserService
                     ValidateAudience = true,
                     ValidAudience = AuthOptions.AUDIENCE,   // Должно совпадать с UserService
                     ValidateLifetime = true,
                     IssuerSigningKey = AuthOptions.GetSymmetricSecurityKey(), // Должен быть тот же ключ
                     ValidateIssuerSigningKey = true,
+                };
+
+                options.Events = new Microsoft.AspNetCore.Authentication.JwtBearer.JwtBearerEvents
+                {
+                    OnAuthenticationFailed = context =>
+                    {
+                        // Эта строка напишет в консоль ТОЧНУЮ причину ошибки (например, "Signature validation failed")
+                        Console.WriteLine($"[JWT ОШИБКА] {context.Exception.Message}");
+                        if (context.Exception.GetType() == typeof(SecurityTokenExpiredException))
+                        {
+                            context.Response.Headers.Append("Token-Expired", "true");
+                        }
+                        return Task.CompletedTask;
+                    },
+                    OnTokenValidated = context =>
+                    {
+                        Console.WriteLine("[JWT УСПЕХ] Токен успешно проверен!");
+                        return Task.CompletedTask;
+                    }
                 };
             });
 
@@ -94,6 +123,7 @@ namespace ProductService
             app.UseHttpsRedirection();
 
             app.UseMiddleware<ExceptionMiddleware>();
+            app.UseCors("AllowAll");
             app.UseAuthentication();
             app.UseAuthorization();
 

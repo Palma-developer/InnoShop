@@ -98,10 +98,12 @@ namespace ProductService.Services
 
         public async Task ShowProductsByUserIdAsync(int userId, CancellationToken ct = default)
         {
-            var products = await _repository.GetByUserIdAsync(userId, ct);
+            // Используем специальный метод, который видит скрытые продукты
+            var products = await _repository.GetAllByUserIdIgnoringFiltersAsync(userId, ct);
+
             foreach (var product in products)
             {
-                product.IsHidden = false;
+                product.IsHidden = false; // Делаем видимым
                 _repository.Update(product);
             }
             await _unitOfWork.SaveChangesAsync(ct);

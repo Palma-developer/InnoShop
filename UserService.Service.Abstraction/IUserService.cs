@@ -10,13 +10,14 @@ namespace UserService.Service.Abstraction
 
         Task<UserDTO> GetByIdAsync(int id, CancellationToken cancellationToken = default);
 
-        Task<UserDTO> CreateAsync(UserDTO userDTO, CancellationToken cancellationToken = default);
-        Task UpdateAsync(int id, UserDTO userDTO, CancellationToken cancellationToken = default);
+        Task IsActiveUser(string email, CancellationToken cancellationToken = default);
+        Task<UserDTO> CreateAsync(UserForCreate userForCreate, CancellationToken cancellationToken = default);
+        Task UpdateAsync(int id, UserForUpdate userForUpdate, CancellationToken cancellationToken = default);
 
         Task DeleteAsync(int id, CancellationToken cancellationToken = default);
 
         //метод для логина
-        Task<string> LoginAsync(string email, string password, CancellationToken cancellationToken = default);
+        Task<string> LoginAsync(UserForLogin userForLogin, CancellationToken cancellationToken = default);
 
         Task SendEmailAsync(string email, string message, CancellationToken cancellationToken= default);
 

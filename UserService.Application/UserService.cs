@@ -53,25 +53,54 @@ namespace UserService.Service
             return userDto;
         }
         //метод регистрации
-        public async Task<UserDTO> CreateAsync(UserDTO userDTO, CancellationToken cancellationToken = default)
+        public async Task<UserDTO> CreateAsync(UserForCreate userForCreateDTO, CancellationToken cancellationToken = default)
         {
-            var user = userDTO.Adapt<User>();
+
+            if (!EmailCorect.IsValidEmail(userForCreateDTO.Email))
+            {
+                throw new InvalidOperationException("Email имеет не верный формат");
+            }
+            
+
+            if(_repositoryManager.UserRepository.GetByEmail(userForCreateDTO.Email, cancellationToken) != null)
+            {
+                throw new InvalidOperationException("Пользовател с такой почтой уже зарегистрирован");
+            }
+            var userDto = new UserDTO();
+            
+            userDto.IsActive=true;
+            userDto.Email=userForCreateDTO.Email;
+            userDto.Name=userForCreateDTO.Name;
+            userDto.Password=userForCreateDTO.Password;
+            userDto.Role=userForCreateDTO.Role;
+            userDto.EmailConfirmed = false;
+            var user = userDto.Adapt<User>();
             _repositoryManager.UserRepository.Insert(user);
             await _repositoryManager.UnitOfWork.SaveChangesAsync(cancellationToken);
             return user.Adapt<UserDTO>();
         }
         //метод логина
-        public async Task<string> LoginAsync(string email, string password, CancellationToken cancellationToken = default)
+        public async Task<string> LoginAsync(UserForLogin userForLogin, CancellationToken cancellationToken = default)
         {
-            var user = await _repositoryManager.UserRepository.GetByEmail(email);
-            if (user == null)
+
+            if (!EmailCorect.IsValidEmail(userForLogin.Email))
             {
-                throw new ArgumentException(email);
+                throw new InvalidOperationException("Email имеет не верный формат");
             }
 
-            if (user.Password != password)
+            var user = await _repositoryManager.UserRepository.GetByEmail(userForLogin.Email);
+            if (user == null)
+            {
+                throw new ArgumentException(userForLogin.Email);
+            }
+
+            if (user.Password != userForLogin.Password)
             {
                 throw new ArgumentException("Uncorrect password");
+            }
+            if (!user.EmailConfirmed)
+            {
+                throw new InvalidOperationException("Пользователь не подтвердил свою почту");
             }
             var claims = new List<Claim> { new Claim(ClaimTypes.Name, user.Name),
                                          new Claim (ClaimTypes.Email, user.Email.Value),
@@ -79,7 +108,7 @@ namespace UserService.Service
                                          new Claim("EmailConfirm" , user.EmailConfirmed.ToString()),
                                          new Claim("id", user.Id.ToString())};
             var jwt = new JwtSecurityToken(
-                issuer: AuthOptions.ISSURE,
+                issuer: AuthOptions.ISSUER,
                 audience: AuthOptions.AUDIENCE,
                 claims: claims,
                 expires: DateTime.UtcNow.Add(TimeSpan.FromMinutes(30)),
@@ -87,7 +116,7 @@ namespace UserService.Service
             return new JwtSecurityTokenHandler().WriteToken(jwt);
         }
 
-        public async Task UpdateAsync(int id, UserDTO userDTO, CancellationToken cancellationToken = default)
+        public async Task UpdateAsync(int id, UserForUpdate userForUpdate, CancellationToken cancellationToken = default)
         {
             var user = await _repositoryManager.UserRepository.GetByIdAsync(id, cancellationToken);
 
@@ -97,17 +126,14 @@ namespace UserService.Service
             }
 
 
-            if (!Enum.TryParse<UserRole>(userDTO.Role, out var role))
+            if (!Enum.TryParse<UserRole>(userForUpdate.Role, out var role))
             {
                 throw new ArgumentException("Invalid role");
             }
 
-            user.Name = userDTO.Name;
-            user.Email.Value = userDTO.Email;
-            user.EmailConfirmed = userDTO.EmailConfirmed;
-            user.IsActive = userDTO.IsActive;
+            user.Name = userForUpdate.Name;
             user.Role = role;
-            user.Password = userDTO.Password;
+            
 
             _repositoryManager.UserRepository.Update(user);
 
@@ -125,6 +151,8 @@ namespace UserService.Service
                 throw new ArgumentException(Convert.ToString(id));
             }
             user.IsActive = false;
+            using var httpClient= new HttpClient();
+            await httpClient.PutAsync($"http://localhost:5077/api/products/hide-by-user/{id}", null);
             _repositoryManager.UserRepository.Delete(user);
 
             await _repositoryManager.UnitOfWork.SaveChangesAsync(cancellationToken);
@@ -245,8 +273,24 @@ namespace UserService.Service
             {
                 throw new InvalidOperationException("Срок действия ссылки для сброса пароля истек.");
             }
+        }
+        public async Task IsActiveUser(string email, CancellationToken cancellationToken = default)
+        {
+            if (!EmailCorect.IsValidEmail(email))
+            {
+                throw new InvalidOperationException("Email имеет не верный формат");
+            }
 
-            
+            var user= await _repositoryManager.UserRepository.GetByEmailNoActive(email);
+            if (user is null)
+            {
+                throw new InvalidOperationException("Ползователь с таким email не найден или уже активен");
+            }
+            user.IsActive = true;
+            var httpClient=new HttpClient();
+            await httpClient.PutAsync($"http://localhost:5077/api/products/show-by-user/{user.Id}", null);
+            await _repositoryManager.UnitOfWork.SaveChangesAsync(cancellationToken);
+
         }
     }
 }

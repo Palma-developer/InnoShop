@@ -56,5 +56,12 @@ namespace ProductService.Infrastructure.Persistence.Repository
         {
             _context.Products.Remove(product);
         }
+        public async Task<IEnumerable<Product>> GetAllByUserIdIgnoringFiltersAsync(int userId, CancellationToken ct = default)
+        {
+            return await _context.Products
+                .IgnoreQueryFilters() // <-- ЭТА СТРОКА ОТКЛЮЧАЕТ ПРОВЕРКУ IsHidden = 0
+                .Where(p => p.UserId == userId)
+                .ToListAsync(ct);
+        }
     }
 }
