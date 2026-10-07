@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Microsoft.Extensions.Configuration;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -12,9 +13,9 @@ namespace UserService.Service
     {
         private readonly Lazy<IUserService> _lazyUserService;
 
-        public ServiceManager(IRepositoryManager repositoryManager)
+        public ServiceManager(IRepositoryManager repositoryManager, IConfiguration configuration)
         {
-            _lazyUserService = new Lazy<IUserService>(() => new UserService(repositoryManager));
+            _lazyUserService = new Lazy<IUserService>(() => new UserService(repositoryManager, configuration));
         }
         public IUserService UserService=>_lazyUserService.Value; 
     }

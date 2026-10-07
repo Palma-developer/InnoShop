@@ -12,14 +12,20 @@ using Microsoft.IdentityModel.Tokens;
 using MimeKit;
 using MailKit.Net.Smtp;
 using System.Diagnostics.Contracts;
+using Microsoft.Extensions.Configuration;
 
 namespace UserService.Service
 {
     public sealed class UserService : IUserService
     {
         private readonly IRepositoryManager _repositoryManager;
+        private readonly IConfiguration _configuration;
+        public UserService(IRepositoryManager repositoryManager, IConfiguration configuration)
+        {
+            _repositoryManager = repositoryManager;
+            _configuration = configuration;
+        }
 
-        public UserService(IRepositoryManager repositoryManager) => _repositoryManager = repositoryManager;
         public async Task<IEnumerable<UserDTO>> GetAllAsync(CancellationToken cancellationToken = default)
         {
 
@@ -47,7 +53,7 @@ namespace UserService.Service
             var user = await _repositoryManager.UserRepository.GetByIdAsync(id, cancellationToken);
             if (user == null)
             {
-                throw new ArgumentException(Convert.ToString(id));
+                throw new ArgumentException("Пользователь не найден, id: "+ Convert.ToString(id));
             }
             var userDto = user.Adapt<UserDTO>();
             return userDto;
@@ -153,7 +159,9 @@ namespace UserService.Service
             }
             user.IsActive = false;
             using var httpClient= new HttpClient();
-            await httpClient.PutAsync($"http://localhost:5077/api/products/hide-by-user/{id}", null);
+            var productServiceUrl = _configuration["ProductServiceBaseUrl"] ?? "http://localhost:5077";
+            await httpClient.PutAsync($"{productServiceUrl}/api/products/hide-by-user/{id}", null);
+           
             _repositoryManager.UserRepository.Delete(user);
 
             await _repositoryManager.UnitOfWork.SaveChangesAsync(cancellationToken);
@@ -217,6 +225,11 @@ namespace UserService.Service
 
         public async Task RequestPasswordResetAsync(string email, CancellationToken cancellationToken = default)
         {
+
+            if (!EmailCorect.IsValidEmail(email))
+            {
+                throw new InvalidOperationException("Email имеет не верный формат");
+            }
             var user = await _repositoryManager.UserRepository.GetByEmail(email);
             if (user is null)
             {
@@ -289,7 +302,9 @@ namespace UserService.Service
             }
             user.IsActive = true;
             var httpClient=new HttpClient();
-            await httpClient.PutAsync($"http://localhost:5077/api/products/show-by-user/{user.Id}", null);
+            var productServiceUrl = _configuration["ProductServiceBaseUrl"] ?? "http://localhost:5077";
+            await httpClient.PutAsync($"{productServiceUrl}/api/products/show-by-user/{user.Id}", null);
+            //await httpClient.PutAsync($"http://localhost:5077/api/products/show-by-user/{user.Id}", null);
             await _repositoryManager.UnitOfWork.SaveChangesAsync(cancellationToken);
 
         }

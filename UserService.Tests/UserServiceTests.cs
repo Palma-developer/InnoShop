@@ -7,6 +7,7 @@ using UserService.Domain.Repository;
 using UserService.Service.Abstraction.Models;
 using UserService.Domain.Entities;
 using UserService.Domain.Enums;
+using Microsoft.Extensions.Configuration;
 
 namespace UserService.Tests
 {
@@ -16,17 +17,19 @@ namespace UserService.Tests
         private readonly Mock<IUserRepository> _mockUserRepo;
         private readonly Mock<IUnitOfWork> _mockUnitOfWork;
         private readonly UserService.Service.UserService _service;
+        private readonly Mock<IConfiguration> _mockConfiguration;
 
         public UserServiceTests()
         {
             _mockRepoManager = new Mock<IRepositoryManager>();
             _mockUserRepo = new Mock<IUserRepository>();
             _mockUnitOfWork = new Mock<IUnitOfWork>();
+            _mockConfiguration=new Mock<IConfiguration>();
 
             _mockRepoManager.Setup(r => r.UserRepository).Returns(_mockUserRepo.Object);
             _mockRepoManager.Setup(r => r.UnitOfWork).Returns(_mockUnitOfWork.Object);
-
-            _service = new UserService.Service.UserService(_mockRepoManager.Object);
+            
+            _service = new UserService.Service.UserService(_mockRepoManager.Object, _mockConfiguration.Object);
         }
 
         #region Тесты регистрации (CreateAsync)

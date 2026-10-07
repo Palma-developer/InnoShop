@@ -1,0 +1,68 @@
+﻿services:
+  # ==================== БАЗА ДАННЫХ ====================
+  sqlserver:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    container_name: innoshop_sqlserver
+    environment:
+      SA_PASSWORD: "YourStrong!Passw0rd"
+      ACCEPT_EULA: "Y"
+      MSSQL_PID: "Developer"
+    ports:
+      - "1433:1433"
+    volumes:
+      - sqlserver_data:/var/opt/mssql
+    networks:
+      - innoshop_network
+    healthcheck:
+      test: /opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P "YourStrong!Passw0rd" -C -Q "SELECT 1" || exit 1
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+
+  # ==================== USER SERVICE ====================
+  userservice:
+    build:
+      context: . # Точка = корень D:\InnoShop
+      dockerfile: UserManagmentService/Dockerfile # <-- РЕАЛЬНЫЙ ПУТЬ
+    container_name: innoshop_userservice
+    ports:
+      - "5111:8080"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_URLS=http://+:8080
+      - ConnectionStrings__Database=Server=sqlserver;Database=InShopDb;User Id=sa;Password=YourStrong!Passw0rd;TrustServerCertificate=True;
+      - ProductServiceBaseUrl=http://productservice:8080
+    depends_on:
+      sqlserver:
+        condition: service_healthy
+    networks:
+      - innoshop_network
+    restart: unless-stopped
+
+  # ==================== PRODUCT SERVICE ====================
+  productservice:
+    build:
+      context: . # Точка = корень D:\InnoShop
+      dockerfile: ProductManagmentService/Dockerfile # <-- РЕАЛЬНЫЙ ПУТЬ
+    container_name: innoshop_productservice
+    ports:
+      - "5077:8080"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_URLS=http://+:8080
+      - ConnectionStrings__Database=Server=sqlserver;Database=ProductDb;User Id=sa;Password=YourStrong!Passw0rd;TrustServerCertificate=True;
+    depends_on:
+      sqlserver:
+        condition: service_healthy
+    networks:
+      - innoshop_network
+    restart: unless-stopped
+
+volumes:
+  sqlserver_data:
+    driver: local
+
+networks:
+  innoshop_network:
+    driver: bridge
